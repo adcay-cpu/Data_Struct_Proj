@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Leaderboard System</title>
+    <style>
+        /* Grabbing those cool, futuristic fonts for the gamer aesthetic! */
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@400;600;700&display=swap');
+
+        /* Basic CSS reset to make sure everything looks the same everywhere. */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Setting up the dark, dramatic background with a red gradient. */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a0a0a 50%, #2d1810 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Adding a subtle, fixed matrix/grid pattern to the background for flair. */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            /* Creating the faint diagonal lines. */
+            background: 
+                linear-gradient(45deg, transparent 48%, rgba(255, 107, 107, 0.03) 50%, transparent 52%),
+                linear-gradient(-45deg, transparent 48%, rgba(255, 107, 107, 0.03) 50%, transparent 52%);
+            background-size: 30px 30px;
+            pointer-events: none; /* Make sure this doesn't block clicks on the actual content! */
+            z-index: 0;
+        }
+
+        /* Main container to center everything nicely. */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1; /* Keep content on top of the background pattern. */
+        }
+
+        /* Title section styling. */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.8s ease-out; /* The title slides in! */
+        }
+
+        /* The main "LEADERBOARD" title—using Bebas Neue for that aggressive look. */
+        .header h1 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 5rem;
+            font-weight: 400;
+            letter-spacing: 8px;
+            color: #ffb8a0;
+            /* THIS IS THE NEON GLOW EFFECT! */
+            text-shadow: 
+                0 0 20px rgba(255, 107, 107, 0.5),
+                0 0 40px rgba(255, 107, 107, 0.3),
+                0 4px 8px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        /* The little subtitle text. */
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: #ffb8a0;
+            opacity: 0.8;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        /* Setting up the main layout with a grid: Control panel (1 unit) next to Actions (2 units). */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Styling the main "card" containers—like digital game panels! */
+        .card {
+            /* Dark, semi-transparent background with a subtle blur effect. */
+            background: rgba(20, 10, 10, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid #ff6b6b; /* The signature red border. */
+            border-radius: 0;
+            padding: 30px;
+            /* Adding the glow shadow. */
+            box-shadow: 
+                0 0 30px rgba(255, 107, 107, 0.2),
+                inset 0 0 20px rgba(0,0,0,0.3);
+            animation: fadeInUp 0.8s ease-out; /* Cards slide up when they appear. */
+            position: relative;
+        }
+
+        /* This is the hidden gradient border that shows up on hover. */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff6b6b, #ffb8a0, #ff6b6b);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 0;
+        }
+
+        /* Make that gradient border glow when the user hovers over the card. */
+        .card:hover::before {
+            opacity: 0.3;
+        }
+
+        /* Card titles, using Bebas Neue again. */
+        .card h2 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2rem;
+            letter-spacing: 3px;
+            margin-bottom: 25px;
+            color: #ffb8a0;
+            text-transform: uppercase;
+            border-bottom: 2px solid #ff6b6b; /* Separator line. */
+            padding-bottom: 10px;
+        }
+
+        /* Spacing for the inputs. */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        /* Label styles. */
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #ffb8a0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Input field styling—dark with a red border. */
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #ff6b6b;
+            border-radius: 0;
+            font-size: 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Input focus: Change border color and add a glow when selected. */
+        .input-group input:focus {
+            outline: none;
+            border-color: #ffb8a0;
+            background: rgba(0, 0, 0, 0.7);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+        }
+
+        /* Placeholder text color. */
+        .input-group input::placeholder {
+            color: rgba(255, 184, 160, 0.5);
+        }
+
+        /* Button layout container. */
+        .button-group {
+            display: grid;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        /* General button styles. */
+        button {
+            padding: 15px 30px;
+            border: 2px solid #ff6b6b;
+            border-radius: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden; /* Needed for the ripple effect below! */
+            background: rgba(0, 0, 0, 0.5);
+            color: #ffb8a0;
+        }
+
+        /* The hidden circle that creates the cool ripple/glow effect on hover. */
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 107, 107, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        /* Make the ripple expand when hovering! */
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* Lift the button slightly and add a glow on hover. */
+        button:hover {
+            border-color: #ffb8a0;
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Push the button back down when clicked. */
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Keep the button text visible above the ripple effect. */
+        button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Make the leaderboard container take up the full width below the control cards. */
+        .leaderboard-container {
+            grid-column: 1 / -1;
+        }
+
+        /* Leaderboard table setup. */
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px; /* Adds space between rows. */
+        }
+
+        /* Hide the default table header, we don't need it. */
+        .leaderboard-table thead {
+            display: none;
+        }
+
+        /* Styling for each player row. */
+        .leaderboard-table tbody tr {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #ff6b6b;
+            transition: all 0.3s ease;
+            animation: slideIn 0.5s ease-out; /* Rows slide in smoothly. */
+            position: relative;
+        }
+
+        /* The small red accent bar on the left of each row. */
+        .leaderboard-table tbody tr::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: #ff6b6b;
+            transition: width 0.3s ease;
+        }
+
+        /* Hover effect: Row slides out a bit and gets a shadow glow. */
+        .leaderboard-table tbody tr:hover {
+            background: rgba(255, 107, 107, 0.1);
+            transform: translateX(10px);
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.3);
+        }
+
+        /* Make the accent bar expand slightly on hover. */
+        .leaderboard-table tbody tr:hover::before {
+            width: 100%;
+            opacity: 0.1;
+        }
+
+        /* Padding for all cells. */
+        .leaderboard-table tbody td {
+            padding: 20px;
+            font-size: 1.1rem;
+            border: none;
+        }
+
+        /* Rank column (first cell) styling—big and bold. */
+        .leaderboard-table tbody td:first-child {
+            width: 80px;
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2rem;
+            color: #ffb8a0;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        /* Player Name column (second cell) styling. */
+        .leaderboard-table tbody td:nth-child(2) {
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Score column (last cell) styling—also big and bold. */
+        .leaderboard-table tbody td:last-child {
+            text-align: right;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #ffb8a0;
+            font-family: 'Bebas Neue', cursive;
+        }
+
+        /* The circle badge next to the player's name. */
+        .rank-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 107, 107, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 2px solid #ff6b6b;
+        }
+
+        /* --- RANK-SPECIFIC STYLING (The Medals!) --- */
+
+        /* 🥇 RANK 1 (Gold) */
+        .rank-1 {
+            background: linear-gradient(135deg, #ffb8a0 0%, #ff6b6b 100%); /* Slightly lighter row gradient */
+            border-color: #ffd700;
+        }
+
+        .rank-1 td:first-child {
+            color: #ffd700;
+        }
+
+        .rank-1 .rank-badge {
+            background: #ffd700;
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); /* Intense gold glow! */
+        }
+
+        /* 🥈 RANK 2 (Silver) */
+        .rank-2 {
+            background: linear-gradient(135deg, rgba(255, 184, 160, 0.3) 0%, rgba(255, 107, 107, 0.2) 100%);
+            border-color: #c0c0c0;
+        }
+
+        .rank-2 td:first-child {
+            color: #c0c0c0;
+        }
+
+        .rank-2 .rank-badge {
+            background: #c0c0c0;
+            border-color: #c0c0c0;
+            box-shadow: 0 0 20px rgba(192, 192, 192, 0.5);
+        }
+
+        /* 🥉 RANK 3 (Bronze) */
+        .rank-3 {
+            background: linear-gradient(135deg, rgba(255, 184, 160, 0.2) 0%, rgba(255, 107, 107, 0.1) 100%);
+            border-color: #cd7f32;
+        }
+
+        .rank-3 td:first-child {
+            color: #cd7f32;
+        }
+
+        .rank-3 .rank-badge {
+            background: #cd7f32;
+            border-color: #cd7f32;
+            box-shadow: 0 0 20px rgba(205, 127, 50, 0.5);
+        }
+
+        /* What to show if the leaderboard is empty. */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            opacity: 0.6;
+        }
+
+        .empty-state p {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #ffb8a0;
+        }
+
+        .empty-state small {
+            font-size: 1rem;
+            color: #ff6b6b;
+        }
+
+        /* Simple slide-down animation (for the header). */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Simple slide-up animation (for the cards). */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Simple slide-in-from-left animation (for the table rows). */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* The cool pulsing glow effect for the main title. */
+        @keyframes glow {
+            0%, 100% {
+                /* Normal glow */
+                text-shadow: 
+                    0 0 20px rgba(255, 107, 107, 0.5),
+                    0 0 40px rgba(255, 107, 107, 0.3);
+            }
+            50% {
+                /* Max glow intensity */
+                text-shadow: 
+                    0 0 30px rgba(255, 107, 107, 0.8),
+                    0 0 60px rgba(255, 107, 107, 0.5);
+            }
+        }
+
+        /* Apply the glow animation to the header, looping forever. */
+        .header h1 {
+            animation: fadeInDown 0.8s ease-out, glow 3s ease-in-out infinite;
+        }
+
+        /* --- Responsive Stuff (For smaller screens) --- */
+
+        @media (max-width: 968px) {
+            /* Change the main grid to stack vertically on tablets/small desktops. */
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* Make the title a bit smaller. */
+            .header h1 {
+                font-size: 3rem;
+            }
+
+            /* Stack the rank badge and name vertically on smaller screens. */
+            .leaderboard-table tbody td:nth-child(2) {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            /* Make fonts even smaller for mobile. */
+            .header h1 {
+                font-size: 2.5rem;
+                letter-spacing: 4px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .leaderboard-table tbody td {
+                padding: 15px 10px;
+                font-size: 0.9rem;
+            }
+
+            .leaderboard-table tbody td:first-child {
+                font-size: 1.5rem;
+                width: 60px;
+            }
+
+            .leaderboard-table tbody td:last-child {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LEADERBOARD</h1>
+            <div class="subtitle">Ultimate Game Rankings</div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <h2>Player Control</h2>
+                <div class="input-group">
+                    <label for="playerName">Player Name</label>
+                    <input type="text" id="playerName" placeholder="Enter name">
+                </div>
+                <div class="input-group">
+                    <label for="playerScore">Score</label>
+                    <input type="number" id="playerScore" placeholder="Enter score">
+                </div>
+                <div class="button-group">
+                    <button id="btnAdd"><span>Add Player</span></button>
+                    <button id="btnUpdate"><span>Update Score</span></button>
+                    <button id="btnDelete"><span>Delete Player</span></button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Actions</h2>
+                <div class="button-group">
+                    <button id="btnShow"><span>Refresh Leaderboard</span></button>
+                    <button id="btnClear"><span>Clear All Players</span></button>
+                </div>
+            </div>
+
+            <div class="card leaderboard-container">
+                <h2>Top Players</h2>
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Player</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderBody">
+                        <tr>
+                            <td colspan="3" class="empty-state">
+                                <p>No Players Yet</p>
+                                <small>Add your first player to start the competition</small>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // This array holds all the player objects {name: '...', score: ...}
+        let players = [];
+
+        /* ---------------------------------------------------------------------- */
+        /* --- The Max Heap Class (The brain for super-fast sorting!) --- */
+        /* ---------------------------------------------------------------------- */
+        // This data structure keeps the highest score automatically at the top.
+        class MaxHeap {
+            constructor() {
+                this.data = []; // The list that acts like the heap tree.
+            }
+
+            // Quick math to find the index of a node's children or parent.
+            left(i) { return 2 * i + 1; }
+            right(i) { return 2 * i + 2; }
+            parent(i) { return Math.floor((i - 1) / 2); }
+
+            // Simple function to swap two items in the list.
+            swap(i, j) {
+                [this.data[i], this.data[j]] = [this.data[j], this.data[i]];
+            }
+
+            // Adds a new player, putting them at the end, then fixing the heap.
+            insert(player) {
+                this.data.push(player);
+                this.heapifyUp(this.data.length - 1); // Move it up until Max Heap rules are satisfied.
+            }
+
+            // Moves the element UP if its score is higher than its parent's score.
+            heapifyUp(i) {
+                while (i > 0 && this.data[this.parent(i)].score < this.data[i].score) {
+                    this.swap(i, this.parent(i));
+                    i = this.parent(i);
+                }
+            }
+
+            // Pulls out the highest score (the Root/Index 0) and fixes the heap.
+            extractMax() {
+                if (this.data.length === 0) return null;
+                if (this.data.length === 1) return this.data.pop();
+                
+                let root = this.data[0];
+                this.data[0] = this.data.pop(); // Move the last player to the top.
+                this.heapifyDown(0); // Restore Max Heap properties from the top.
+                return root;
+            }
+
+            // Moves the element DOWN if it's smaller than either of its children.
+            heapifyDown(i) {
+                while (true) {
+                    let leftIndex = this.left(i);
+                    let rightIndex = this.right(i);
+                    let largest = i;
+
+                    // Check if the left child is bigger.
+                    if (leftIndex < this.data.length && 
+                        this.data[leftIndex].score > this.data[largest].score) {
+                        largest = leftIndex;
+                    }
+
+                    // Check if the right child is the largest.
+                    if (rightIndex < this.data.length && 
+                        this.data[rightIndex].score > this.data[largest].score) {
+                        largest = rightIndex;
+                    }
+
+                    if (largest === i) break; // If no child is bigger, we're done here.
+
+                    this.swap(i, largest);
+                    i = largest;
+                }
+            }
+
+            // Generates the final sorted array (Highest score to lowest).
+            toSortedArray() {
+                // IMPORTANT: We copy the heap so we don't mess up the live data!
+                let copy = new MaxHeap();
+                for (let player of this.data) {
+                    copy.insert(player);
+                }
+
+                let result = [];
+                let p = copy.extractMax();
+                while (p !== null) { // Keep pulling out the max until the copy is empty.
+                    result.push(p);
+                    p = copy.extractMax();
+                }
+                return result;
+            }
+        }
+
+        /* ---------------------------------------------------------------------- */
+        /* --- Global Management Functions --- */
+        /* ---------------------------------------------------------------------- */
+
+        // NOTE: This object simulates browser localStorage to save/load data in the demo.
+        let storageData = {};
+
+        // Pulls player data from the fake storage when the page loads.
+        function loadPlayers() {
+            if (storageData.players) {
+                players = JSON.parse(storageData.players);
+            } else {
+                players = [];
+            }
+        }
+
+        // Saves the current player list back to the fake storage.
+        function savePlayers() {
+            storageData.players = JSON.stringify(players);
+        }
+
+        // Finds a player in the list (case-insensitive search).
+        function findPlayerIndex(name) {
+            return players.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+        }
+
+        // Handles the logic for adding a new player.
+        function addPlayer(name, score) {
+            if (!name || isNaN(score)) {
+                alert("⚠️ Please enter both name and score.");
+                return;
+            }
+            
+            if (findPlayerIndex(name) !== -1) {
+                alert("⚠️ Player already exists. Use Update Score instead.");
+                return;
+            }
+            
+            players.push({ name, score });
+            savePlayers();
+            alert("✅ Player added successfully!");
+        }
+
+        // Handles updating an existing player's score.
+        function updatePlayer(name, score) {
+            if (!name || isNaN(score)) {
+                alert("⚠️ Please enter both name and score.");
+                return;
+            }
+            
+            let idx = findPlayerIndex(name);
+            if (idx === -1) {
+                alert("⚠️ Player not found.");
+                return;
+            }
+            
+            players[idx].score = score;
+            savePlayers();
+            alert("✅ Score updated successfully!");
+        }
+
+        // Handles removing a player.
+        function deletePlayer(name) {
+            if (!name) {
+                alert("⚠️ Please enter a player name.");
+                return;
+            }
+            
+            let idx = findPlayerIndex(name);
+            if (idx === -1) {
+                alert("⚠️ Player not found.");
+                return;
+            }
+            
+            players.splice(idx, 1);
+            savePlayers();
+            alert("✅ Player deleted successfully!");
+        }
+
+        // Clears all data, usually with a confirmation popup.
+        function clearAllPlayers() {
+            if (confirm("⚠️ Are you sure you want to delete all players? This cannot be undone.")) {
+                players = [];
+                savePlayers();
+                showLeaderboard(); // Refresh the display.
+            }
+        }
+
+        // The main function that gets the sorted data and renders the table HTML.
+        function showLeaderboard() {
+            // 1. Create a Max Heap instance.
+            let heap = new MaxHeap();
+            for (let player of players) {
+                heap.insert(player); // Add all players to the heap.
+            }
+
+            // 2. Get the perfectly sorted array using the Heap Sort logic.
+            let sorted = heap.toSortedArray();
+            let tbody = document.getElementById("leaderBody");
+            tbody.innerHTML = ""; // Clear the old table rows first.
+
+            // If the list is empty, display the friendly empty state message.
+            if (sorted.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="empty-state">
+                            <p>No Players Yet</p>
+                            <small>Add your first player to start the competition</small>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // 3. Loop through the sorted players and generate the HTML table rows.
+            sorted.forEach((player, index) => {
+                let row = document.createElement("tr");
+                
+                // Apply the special medal styling CSS class to the top three rows.
+                if (index === 0) row.classList.add("rank-1"); // Gold
+                else if (index === 1) row.classList.add("rank-2"); // Silver
+                else if (index === 2) row.classList.add("rank-3"); // Bronze
+
+                // Select the correct emoji trophy to display.
+                let trophy = "";
+                if (index === 0) trophy = "🥇";
+                else if (index === 1) trophy = "🥈";
+                else if (index === 2) trophy = "🥉";
+
+                // The actual HTML for the player row.
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>
+                        <span class="rank-badge">${trophy}</span>
+                        <span>${player.name}</span>
+                    </td>
+                    <td>${player.score}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // --- Event Listeners: What happens when the page loads ---
+        window.onload = function() {
+            loadPlayers(); // Try to load any previously saved players.
+            showLeaderboard(); // Display the list.
+
+            // Get the references to the input fields.
+            let nameInput = document.getElementById("playerName");
+            let scoreInput = document.getElementById("playerScore");
+
+            // 'Add Player' button click handler.
+            document.getElementById("btnAdd").onclick = () => {
+                let name = nameInput.value.trim();
+                let score = parseInt(scoreInput.value);
+                addPlayer(name, score);
+                showLeaderboard(); // Update the displayed table.
+                nameInput.value = ""; // Clear the form fields after success.
+                scoreInput.value = "";
+            };
+
+            // 'Update Score' button click handler.
+            document.getElementById("btnUpdate").onclick = () => {
+                let name = nameInput.value.trim();
+                let score = parseInt(scoreInput.value);
+                updatePlayer(name, score);
+                showLeaderboard(); // Update the displayed table.
+            };
+
+            // 'Delete Player' button click handler.
+            document.getElementById("btnDelete").onclick = () => {
+                let name = nameInput.value.trim();
+                deletePlayer(name);
+                showLeaderboard(); // Update the displayed table.
+                nameInput.value = ""; // Clear the name field.
+            };
+
+            // 'Refresh Leaderboard' button handler.
+            document.getElementById("btnShow").onclick = () => {
+                showLeaderboard();
+            };
+
+            // 'Clear All Players' button handler.
+            document.getElementById("btnClear").onclick = () => {
+                clearAllPlayers();
+            };
+        };
+    </script>
+</body>
+</html>
